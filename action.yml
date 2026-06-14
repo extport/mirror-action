@@ -84,7 +84,7 @@ runs:
     - name: Build binary
       id: build
       if: inputs.mode == 'build'
-      uses: extport/pie-ext-binary-builder@b13a32b59c1df0b7b6db6282b8939b7796d4e845 # v1.0.0
+      uses: extport/pie-ext-binary-builder@ecca982e695a33430128455249d19627df25b82a # v1.0.1
       with:
         release-tag: ${{ inputs.release-tag }}
         github-token: ${{ inputs.github-token }}
