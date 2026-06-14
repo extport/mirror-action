@@ -1,4 +1,4 @@
-name: 'PIE Mirror Action'
+name: 'ExtPort Mirror Action'
 description: 'Sync, validate, build, and release PIE-compatible PHP extension mirrors'
 
 inputs:
@@ -60,10 +60,10 @@ outputs:
     description: 'Resolved build path (resolve-matrix mode only)'
     value: ${{ steps.node.outputs.build-path }}
   configure-flags:
-    description: 'Configure flags from .pie-mirror.json (resolve-matrix mode only)'
+    description: 'Configure flags from .extport.json (resolve-matrix mode only)'
     value: ${{ steps.node.outputs.configure-flags }}
   apk-packages:
-    description: 'Additional Alpine packages from .pie-mirror.json (resolve-matrix mode only)'
+    description: 'Additional Alpine packages from .extport.json (resolve-matrix mode only)'
     value: ${{ steps.node.outputs.apk-packages }}
 
 runs:
