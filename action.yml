@@ -1,0 +1,101 @@
+name: 'PIE Mirror Action'
+description: 'Sync, validate, build, and release PIE-compatible PHP extension mirrors'
+
+inputs:
+  mode:
+    description: 'Action mode: sync | validate | build | resolve-matrix'
+    required: true
+  github-token:
+    description: 'GitHub token with contents:write permission'
+    required: true
+  max-versions:
+    description: 'Maximum number of versions to sync per run (0 = unlimited)'
+    required: false
+    default: '0'
+  dry-run:
+    description: 'Log what would happen without making changes'
+    required: false
+    default: 'false'
+  configure-flags:
+    description: 'Flags passed to ./configure during build (build mode only)'
+    required: false
+    default: ''
+  build-path:
+    description: 'Path to extension source directory containing config.m4, relative to repo root (build mode only)'
+    required: false
+    default: '.'
+  release-tag:
+    description: 'Release tag to upload binary to (build mode only)'
+    required: false
+    default: ''
+  docker-image:
+    description: 'Docker image to run the build inside (e.g. php:8.2-cli-alpine). When set, build and PHP detection run inside this container via docker run. (build mode only)'
+    required: false
+    default: ''
+  apk-packages:
+    description: 'Additional Alpine packages for Docker builds (space-separated, build mode only)'
+    required: false
+    default: ''
+
+outputs:
+  synced-versions:
+    description: 'JSON array of version strings that were synced'
+    value: ${{ steps.node.outputs.synced-versions }}
+  latest-version:
+    description: 'The highest version synced, or empty string'
+    value: ${{ steps.node.outputs.latest-version }}
+  validation-passed:
+    description: '"true" or "false" (validate mode only)'
+    value: ${{ steps.node.outputs.validation-passed }}
+  package-path:
+    description: 'Path to the built binary ZIP (build mode only)'
+    value: ${{ steps.build.outputs.package-path }}
+  enabled:
+    description: '"true" or "false" — whether builds are enabled (resolve-matrix mode only)'
+    value: ${{ steps.node.outputs.enabled }}
+  matrix:
+    description: 'JSON build matrix object (resolve-matrix mode only)'
+    value: ${{ steps.node.outputs.matrix }}
+  build-path:
+    description: 'Resolved build path (resolve-matrix mode only)'
+    value: ${{ steps.node.outputs.build-path }}
+  configure-flags:
+    description: 'Configure flags from .pie-mirror.json (resolve-matrix mode only)'
+    value: ${{ steps.node.outputs.configure-flags }}
+  apk-packages:
+    description: 'Additional Alpine packages from .pie-mirror.json (resolve-matrix mode only)'
+    value: ${{ steps.node.outputs.apk-packages }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run sync or validate
+      id: node
+      if: inputs.mode == 'sync' || inputs.mode == 'validate' || inputs.mode == 'resolve-matrix'
+      run: node "${{ github.action_path }}/dist/index.js"
+      shell: bash
+      env:
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_GITHUB-TOKEN: ${{ inputs.github-token }}
+        INPUT_MAX-VERSIONS: ${{ inputs.max-versions }}
+        INPUT_DRY-RUN: ${{ inputs.dry-run }}
+        INPUT_RELEASE-TAG: ${{ inputs.release-tag }}
+
+    - name: Build binary
+      id: build
+      if: inputs.mode == 'build'
+      uses: extport/pie-ext-binary-builder@v1
+      with:
+        release-tag: ${{ inputs.release-tag }}
+        github-token: ${{ inputs.github-token }}
+        configure-flags: ${{ inputs.configure-flags }}
+        build-path: ${{ inputs.build-path }}
+        docker-image: ${{ inputs.docker-image }}
+        apk-packages: ${{ inputs.apk-packages }}
+
+    - name: Fail on unknown mode
+      if: inputs.mode != 'sync' && inputs.mode != 'validate' && inputs.mode != 'build' && inputs.mode != 'resolve-matrix'
+      run: |
+        echo "::error::Unknown mode: '${{ inputs.mode }}'. Valid modes: sync, validate, build, resolve-matrix"
+        exit 1
+      shell: bash

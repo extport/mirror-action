@@ -1,0 +1,28 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        "helpers:pinGitHubActionDigests"
+    ],
+    "packageRules": [
+        {
+            "description": "Auto-merge minor and patch updates for production npm deps",
+            "matchManagers": ["npm"],
+            "matchDepTypes": ["dependencies"],
+            "matchUpdateTypes": ["minor", "patch"],
+            "automerge": true
+        },
+        {
+            "description": "Auto-merge all devDependency updates",
+            "matchManagers": ["npm"],
+            "matchDepTypes": ["devDependencies"],
+            "automerge": true
+        },
+        {
+            "description": "Auto-merge digest updates for already-pinned actions",
+            "matchManagers": ["github-actions"],
+            "matchUpdateTypes": ["digest", "pinDigest"],
+            "automerge": true
+        }
+    ]
+}
