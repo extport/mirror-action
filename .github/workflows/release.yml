@@ -21,12 +21,14 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-      - name: Build and commit dist
-        uses: miguelcolmenares/npm-auto-build@8c22581033b30b631ff66f6c1b72fa3bdc2ea312 # v2.1.2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          node-version: '24'
-          commit-message: 'build: compile dist for ${{ github.event.release.tag_name }}'
+      - run: npm run build
+      - name: Commit dist to release tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f dist/
+          git commit -m "build: compile dist for ${{ github.event.release.tag_name }}"
+          git push origin HEAD:refs/tags/${{ github.event.release.tag_name }} --force
       - name: Update major version tag
         run: |
           TAG="${{ github.event.release.tag_name }}"
