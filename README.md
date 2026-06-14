@@ -111,7 +111,7 @@ Each mirror repo carries a `.extport.json` at the repo root that describes how t
     "hooks": {
         "post-extract": [
             "cp -r deps/ src/",
-            "node .pie-scripts/fix.js"
+            "node .scripts/fix.js"
         ]
     },
     "build": {

@@ -1,8 +1,8 @@
-# pie-extensions/mirror-action
+# extport/mirror-action
 
 ## What this action does
 
-This is a GitHub Action that handles syncing PHP extension source code from upstream repos into PIE-compatible mirror repos. It's called by each mirror repo's `sync.yml` workflow (dispatched by `pie-extensions/core`).
+This is a GitHub Action that handles syncing PHP extension source code from upstream repos into PIE-compatible mirror repos. It's called by each mirror repo's `sync.yml` workflow (dispatched by `extport/core`).
 
 ## Modes
 
@@ -62,7 +62,7 @@ Checks that the mirror repo is PIE-compliant:
     "hooks": {
         "post-extract": [
             "cp -r deps/ src/",
-            "node .pie-scripts/fix.js"
+            "node .scripts/fix.js"
         ]
     }
 }
