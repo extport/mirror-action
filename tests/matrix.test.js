@@ -1,6 +1,24 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolvePhpVersions, resolveMatrix } from '../src/utils/matrix.js';
+import { resolvePhpVersions, resolveMatrix, isUnsupportedPlatform } from '../src/utils/matrix.js';
+
+describe('isUnsupportedPlatform', () => {
+    it('flags darwin x86_64 below PHP 8.5', () => {
+        assert.equal(isUnsupportedPlatform('darwin', 'x86_64', '8.2'), true);
+        assert.equal(isUnsupportedPlatform('darwin', 'x86_64', '8.4'), true);
+        assert.equal(isUnsupportedPlatform('darwin', 'x86_64', 8.4), true);
+    });
+
+    it('allows darwin x86_64 from PHP 8.5', () => {
+        assert.equal(isUnsupportedPlatform('darwin', 'x86_64', '8.5'), false);
+        assert.equal(isUnsupportedPlatform('darwin', 'x86_64', '9.0'), false);
+    });
+
+    it('allows other platforms on any PHP version', () => {
+        assert.equal(isUnsupportedPlatform('darwin', 'arm64', '8.2'), false);
+        assert.equal(isUnsupportedPlatform('linux', 'x86_64', '8.2'), false);
+    });
+});
 
 describe('resolvePhpVersions', () => {
     it('matches a wildcard constraint', () => {
@@ -164,8 +182,30 @@ describe('resolveMatrix', () => {
         assert.ok(darwinEntries.every(e => e.libc === 'bsdlibc'));
         assert.ok(darwinEntries.length > 0);
 
-        // Total: linux(2 arches * 3 php * 2 zts * 2 libc) + darwin(2 arches * 3 php * 2 zts * 1 libc)
-        assert.equal(result.matrix.include.length, 24 + 12);
+        // Total: linux(2 arches * 3 php * 2 zts * 2 libc) + darwin(arm64 only * 3 php * 2 zts * 1 libc)
+        assert.equal(result.matrix.include.length, 24 + 6);
+    });
+
+    it('skips darwin x86_64 for PHP < 8.5', () => {
+        const config = {
+            ...baseConfig,
+            build: {
+                ...baseConfig.build,
+                'php-version-constraints': [
+                    { 'ext-versions': '*', 'php-versions': ['8.2', '8.3', '8.4', '8.5'] },
+                ],
+            },
+        };
+        const result = resolveMatrix('1.0.0', config);
+        const darwinIntel = result.matrix.include.filter(e => e.os === 'darwin' && e.arch === 'x86_64');
+        assert.deepEqual([...new Set(darwinIntel.map(e => e.php))], ['8.5']);
+        assert.equal(darwinIntel.length, 2);
+
+        const darwinArm = result.matrix.include.filter(e => e.os === 'darwin' && e.arch === 'arm64');
+        assert.deepEqual([...new Set(darwinArm.map(e => e.php))], ['8.2', '8.3', '8.4', '8.5']);
+
+        const linuxIntel = result.matrix.include.filter(e => e.os === 'linux' && e.arch === 'x86_64');
+        assert.deepEqual([...new Set(linuxIntel.map(e => e.php))], ['8.2', '8.3', '8.4', '8.5']);
     });
 
     it('uses version-specific constraint when matching', () => {

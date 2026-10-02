@@ -29,6 +29,22 @@ export function resolvePhpVersions(extVersion, buildConfig) {
 }
 
 /**
+ * Whether a platform/PHP combination cannot be built on GitHub-hosted runners.
+ *
+ * Intel macOS runners only ship the latest PHP preinstalled. Older versions are
+ * installed by setup-php from the shivammathur/php Homebrew tap, which no longer
+ * publishes Intel macOS bottles, so it falls back to a source build that fails.
+ *
+ * @param {string} os
+ * @param {string} arch
+ * @param {string|number} php - PHP major.minor version, e.g. "8.4"
+ * @returns {boolean}
+ */
+export function isUnsupportedPlatform(os, arch, php) {
+    return os === 'darwin' && arch === 'x86_64' && semver.lt(semver.coerce(String(php)), '8.5.0');
+}
+
+/**
  * Resolve the full build matrix for a given extension version.
  *
  * @param {string} extVersion - Extension version (tag)
@@ -72,6 +88,9 @@ export function resolveMatrix(extVersion, config) {
         const libcVariants = os === 'darwin' ? ['bsdlibc'] : build.libc;
         for (const arch of build.arches) {
             for (const php of phpVersions) {
+                if (isUnsupportedPlatform(os, arch, php)) {
+                    continue;
+                }
                 for (const zts of build.zts) {
                     for (const libc of libcVariants) {
                         include.push({ os, arch, php, zts, libc });

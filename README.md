@@ -130,6 +130,8 @@ Each mirror repo carries a `.extport.json` at the repo root that describes how t
 }
 ```
 
+> **Note:** Intel macOS (`darwin` + `x86_64`) is only built for PHP 8.5+. Older PHP versions are not preinstalled on the Intel macOS runners, and the Homebrew tap used by `setup-php` no longer publishes Intel macOS bottles, so those builds are skipped from the matrix.
+
 ### Post-extract hooks
 
 Commands listed under `hooks.post-extract` run after the upstream tarball is extracted but before `composer.json` is updated and the commit is created. Each entry is a shell command string executed via `sh -c`. To run a script file, write the full invocation (e.g. `node script.js` or `bash script.sh`).
