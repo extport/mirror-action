@@ -12,7 +12,7 @@
     "test:cov": "node --test --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**/*.js' tests/index.test.js tests/composer.test.js tests/config.test.js tests/git.test.js tests/github.test.js tests/hooks.test.js tests/matrix.test.js tests/release.test.js tests/resolve-matrix.test.js tests/validate.test.js tests/versions.test.js tests/sync.test.js"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^3.0.0",
     "@actions/exec": "^3.0.0",
     "@octokit/rest": "^22.0.0",
     "semver": "^7.6.0"
